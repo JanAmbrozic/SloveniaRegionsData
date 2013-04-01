@@ -5,20 +5,27 @@ var sloveniaRegionMap =
 {
 	arrayRegionsMapping : {0:"Zasavska", 1:"Goriška", 2:"Gorenjska", 3:"Obalno-kraška", 4:"Notranjsko-kraška", 5:"Osrednjeslovenska",6:"Jugovzhodna",7:"Spodnjeposavska", 8:"Savinjska", 9:"Koroška", 10:"Podravska", 11:"Pomurska"},
 	defaultPropery : null,
-	regions : [],
+	regions : null,
 	//default random colorScale
-	colorScale : [0,10,20,30,50,80,130],
+	colorScale : null,
 
 	/*
 	init() initializes tileLayer with help of cloudmade.com. Should always be called before doing anything else.
 	*/
 	init: function() 
 	{
+		//initialize variables
+		this.defaultPropery = null;
+		this.regions = [];
+		this.colorScale = [0,10,20,30,50,80,130];
+
 		L.tileLayer('http://{s}.tile.cloudmade.com/{key}/{styleId}/256/{z}/{x}/{y}.png', {
 			key: "ee24b382df8040c4867a605bdc6c54a2",
 			attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
 			styleId: 22677
 		}).addTo(map);
+
+		this.addSettings();
 
 		this.addRegionsPolygons();
 	},
@@ -48,6 +55,7 @@ var sloveniaRegionMap =
 	*/
 	addSettings: function() 
 	{
+
 		for (var key in statsData["Pomurska"]) {
 			if (statsData["Pomurska"].hasOwnProperty(key)) {
 				//we set first property as the default propery. Should be changed to something smarter :)
@@ -113,7 +121,7 @@ var sloveniaRegionMap =
 	*/
 	style: function(feature) {
 	    return {
-	        fillColor: this.getColor(feature[this.defaultPropery]),
+	        fillColor: sloveniaRegionMap.getColor(feature[sloveniaRegionMap.defaultPropery]),
 	        weight: 2,
 	        opacity: 1,
 	        color: 'white',
@@ -155,8 +163,8 @@ var sloveniaRegionMap =
 
 	    //we also have to update the infoPanel with data about the polygon
 	    info.update(layer.feature.statsData);
-
 	}
+	
 }
 
 var utils = 
@@ -207,10 +215,29 @@ var utils =
 
 $(document).ready(function() {
 	sloveniaRegionMap.init();
-	sloveniaRegionMap.addSettings();
 
 	$("input:radio").change(function() {
 		sloveniaRegionMap.checkboxesChange($(this));
+	});
+
+	//TODO refactor this. 
+	$("button#submitNewData").click(function() {
+		$('div#map').remove();
+		$('label.radio').remove();
+		//replace the data
+		var textObject = $("textarea#newData").val()
+		statsData = JSON.parse(textObject);
+		$('body').append('<div id="map"></div>');
+		//reinitialize everything
+		map = null;
+		map = L.map('map').setView([46.151241, 14.995463], 9);
+		info.addTo(map);
+		sloveniaRegionMap.init();
+
+		//we have to register listeners again
+		$("input:radio").change(function() {
+			sloveniaRegionMap.checkboxesChange($(this));
+		});
 	});
 });
 
